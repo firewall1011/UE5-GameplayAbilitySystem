@@ -5,10 +5,12 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Interaction/EnemyInterface.h"
 
 AAuraPlayerController::AAuraPlayerController()
 {
 	bReplicates = true;
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void AAuraPlayerController::BeginPlay()
@@ -38,6 +40,13 @@ void AAuraPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAuraPlayerController::Move);
 }
 
+void AAuraPlayerController::PlayerTick(float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime);
+
+	CursorTrace();
+}
+
 void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2d InputAxisVector = InputActionValue.Get<FVector2d>();
@@ -53,5 +62,25 @@ void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
 	}
 	
+}
+void AAuraPlayerController::CursorTrace()
+{
+	FHitResult CursorHitResult;
+	GetHitResultUnderCursor(ECC_Visibility, false, CursorHitResult);
+	if(!CursorHitResult.bBlockingHit) return;
+	
+	LastHoveredActor = CurrentHoveredActor;
+	CurrentHoveredActor = Cast<IEnemyInterface>(CursorHitResult.GetActor());
+
+	if (LastHoveredActor == CurrentHoveredActor) return;
+	
+	if (LastHoveredActor)
+	{
+		LastHoveredActor->UnHighlightActor();
+	}
+	if (CurrentHoveredActor)
+	{
+		CurrentHoveredActor->HighlightActor();
+	}
 }
 
