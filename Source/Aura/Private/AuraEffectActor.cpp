@@ -31,10 +31,15 @@ void AAuraEffectActor::BeginPlay()
 void AAuraEffectActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	// TODO: change this to apply a Gameplay Effect. For now, using const_cast as a hack!
 	if (const IAbilitySystemInterface* AscInterface = Cast<IAbilitySystemInterface>(OtherActor))
 	{
 		const UAuraAttributeSet* AuraAttributeSet = Cast<UAuraAttributeSet>(AscInterface->GetAbilitySystemComponent()->GetAttributeSet(UAuraAttributeSet::StaticClass()));
-		// TODO: Apply gameplay effect
+		
+		UAuraAttributeSet* MutableAttributeSet = const_cast<UAuraAttributeSet*>(AuraAttributeSet);
+		MutableAttributeSet->SetHealth(AuraAttributeSet->GetHealth() + 25.f);
+		MutableAttributeSet->SetMana(AuraAttributeSet->GetMana() - 25.f);
+		Destroy();
 	}
 }
 
